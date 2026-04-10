@@ -54,6 +54,17 @@ class WorkspaceToolbox:
             handle.write(content)
         return f"Appended {len(content)} characters to {target.relative_to(self.workspace)}"
 
+    def delete_file(self, path: str) -> str:
+        target= self._resolve_path(path)
+        if target.exists():
+            if target.is_file():
+                target.unlink()
+                return f"Deleted file {target.relative_to(self.workspace)}"
+            else:
+                return f"Unable to delete because the path is a folder: {target}"
+        else:
+            return f"File not found: {target}"
+
     def safe_calc(self, expr: str) -> str:
         allowed = set("0123456789+-*/(). %")
         if not set(expr) <= allowed:
@@ -80,6 +91,7 @@ class WorkspaceToolbox:
             "- read_file: {'path': 'relative/path.py', 'max_chars': 12000}\n"
             "- write_file: {'path': 'relative/path.py', 'content': '...'}\n"
             "- append_file: {'path': 'notes.txt', 'content': '...'}\n"
+            "- delete_file: {'path': 'notes.txt'}\n"
             "- safe_calc: {'expr': '(12.5*4)/2'}\n"
             "- save_note: {'text': 'important fact'}\n"
             "- get_notes: {}\n"
@@ -108,6 +120,8 @@ class WorkspaceToolbox:
                 path=payload.get("path", ""),
                 content=payload.get("content", ""),
             )
+        if action == "delete_file":
+            return self.delete_file(payload.get("path",""))
         if action == "safe_calc":
             return self.safe_calc(payload.get("expr", ""))
         if action == "save_note":
